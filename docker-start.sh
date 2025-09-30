@@ -19,7 +19,7 @@ PROJECT_NAME="QYKCart API"
 COMPOSE_FILE="docker-compose.dev.yml"
 API_PORT="${API_PORT:-3003}"
 MYSQL_PORT="${MYSQL_PORT:-3310}"
-ADMINER_PORT="${ADMINER_PORT:-8081}"
+ADMINER_PORT="${ADMINER_PORT:-8082}"
 
 # Show banner
 echo -e "${BLUE}🛒 $PROJECT_NAME - Docker Development Environment${NC}"
