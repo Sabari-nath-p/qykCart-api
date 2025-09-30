@@ -59,7 +59,7 @@ services:
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-your-firebase-client-email}
     ports:
       - "${API_PORT:-3003}:3003"
-      - "9230:9229" # Debug port
+      - "${DEBUG_PORT:-9231}:9229" # Debug port
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
