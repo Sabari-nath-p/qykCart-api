@@ -41,7 +41,7 @@ After starting the services:
 - **API Base URL**: `http://localhost:3003/api/v1/`
 - **Swagger Documentation**: `http://localhost:3003/api/docs`
 - **Health Check**: `http://localhost:3003/api/v1/health`
-- **Database Admin (Adminer)**: `http://localhost:8081`
+- **Database Admin (Adminer)**: `http://localhost:8085`
 - **PhpMyAdmin** (with db-tools): `http://localhost:8082`
 
 ## 🗄️ Database Access
@@ -117,7 +117,7 @@ Edit `.env.docker` to customize:
 # Port Configuration
 API_PORT=3003
 MYSQL_PORT=3310
-ADMINER_PORT=8081
+ADMINER_PORT=8085
 
 # Database Configuration
 MYSQL_DATABASE=qykcart_db

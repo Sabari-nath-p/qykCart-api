@@ -98,7 +98,7 @@ services:
     container_name: qykcart_adminer_dev
     restart: unless-stopped
     ports:
-      - "${ADMINER_PORT:-8081}:8080"
+      - "${ADMINER_PORT:-8085}:8080"
     networks:
       - qykcart_network
     depends_on:
