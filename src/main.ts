@@ -1,3 +1,6 @@
+// Crypto polyfill for Node.js 18 compatibility with TypeORM
+import './crypto-polyfill';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

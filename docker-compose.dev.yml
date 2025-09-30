@@ -1,37 +1,133 @@
 version: '3.8'
 
 services:
-  # MySQL Database for Development
-  mysql-dev:
+  # MySQL Database
+  mysql:
     image: mysql:8.0
-    container_name: qykcart-mysql-dev
+    container_name: qykcart_mysql_dev
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: qykcart_db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qykcart_db}
+      MYSQL_USER: ${MYSQL_USER:-qykcart_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qykcart_password}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3310}:3306"
     volumes:
-      - mysql_dev_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d
     networks:
-      - qykcart-dev-network
+      - qykcart_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # Redis for Development
-  redis-dev:
+  # NestJS API - Development with Hot Reload
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: qykcart_api_dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      NODE_OPTIONS: "--experimental-global-webcrypto"
+      # Database Configuration
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: ${MYSQL_USER:-qykcart_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-qykcart_password}
+      DB_DATABASE: ${MYSQL_DATABASE:-qykcart_db}
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-development}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-jwt-refresh-key-development}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # API Configuration
+      API_PREFIX: ${API_PREFIX:-api/v1}
+      SWAGGER_PATH: ${SWAGGER_PATH:-api/docs}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      # Firebase Configuration
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-your-firebase-project-id}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-your-firebase-client-email}
+    ports:
+      - "${API_PORT:-3003}:3003"
+      - "9230:9229" # Debug port
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./src/uploads:/usr/src/app/src/uploads
+    networks:
+      - qykcart_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        echo 'Installing dependencies...' &&
+        npm install &&
+        echo 'Building application...' &&
+        npm run build &&
+        echo 'Database setup complete. Starting application in development mode...' &&
+        npm run start:debug
+      "
+
+  # Redis for caching (Optional)
+  redis:
     image: redis:7-alpine
-    container_name: qykcart-redis-dev
+    container_name: qykcart_redis_dev
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     networks:
-      - qykcart-dev-network
+      - qykcart_network
+    profiles:
+      - cache
+
+  # Adminer (Database Management)
+  adminer:
+    image: adminer:4.8.1
+    container_name: qykcart_adminer_dev
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    networks:
+      - qykcart_network
+    depends_on:
+      - mysql
+
+  # PhpMyAdmin (Alternative Database Management)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: qykcart_phpmyadmin_dev
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-qykcart_user}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-qykcart_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+    ports:
+      - "${PHPMYADMIN_PORT:-8082}:80"
+    networks:
+      - qykcart_network
+    depends_on:
+      - mysql
+    profiles:
+      - db-tools
 
 volumes:
-  mysql_dev_data:
+  mysql_data:
     driver: local
 
 networks:
-  qykcart-dev-network:
+  qykcart_network:
     driver: bridge
