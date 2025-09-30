@@ -5,17 +5,17 @@ import { AppService } from './app.service';
 @ApiTags('Application')
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get application info',
-    description: 'Returns basic information about the QYKCart API' 
+    description: 'Returns basic information about the QYKCart API'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Application information retrieved successfully',
-    type: String 
+    type: String
   })
   getHello(): string {
     return this.appService.getHello();
